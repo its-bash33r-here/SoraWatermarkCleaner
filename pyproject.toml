@@ -12,6 +12,7 @@ dependencies = [
     "fastapi==0.108.0",
     "ffmpeg-python>=0.2.0",
     "fire>=0.7.1",
+    "greenlet>=3.2.4",
     "httpx>=0.28.1",
     "huggingface-hub>=0.35.3",
     "jupyter>=1.1.1",
