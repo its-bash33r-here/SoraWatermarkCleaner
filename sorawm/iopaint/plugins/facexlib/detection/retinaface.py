@@ -4,14 +4,25 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
-from torchvision.models._utils import \
-    IntermediateLayerGetter as IntermediateLayerGetter
+from torchvision.models._utils import IntermediateLayerGetter as IntermediateLayerGetter
 
 from .align_trans import get_reference_facial_points, warp_and_crop_face
-from .retinaface_net import (FPN, SSH, MobileNetV1, make_bbox_head,
-                             make_class_head, make_landmark_head)
-from .retinaface_utils import (PriorBox, batched_decode, batched_decode_landm,
-                               decode, decode_landm, py_cpu_nms)
+from .retinaface_net import (
+    FPN,
+    SSH,
+    MobileNetV1,
+    make_bbox_head,
+    make_class_head,
+    make_landmark_head,
+)
+from .retinaface_utils import (
+    PriorBox,
+    batched_decode,
+    batched_decode_landm,
+    decode,
+    decode_landm,
+    py_cpu_nms,
+)
 
 
 def generate_config(network_name):

@@ -8,11 +8,15 @@ from functools import partial
 
 import torch
 
-from sorawm.iopaint.plugins.segment_anything.modeling.tiny_vit_sam import \
-    TinyViT
+from sorawm.iopaint.plugins.segment_anything.modeling.tiny_vit_sam import TinyViT
 
-from .modeling import (ImageEncoderViT, MaskDecoder, PromptEncoder, Sam,
-                       TwoWayTransformer)
+from .modeling import (
+    ImageEncoderViT,
+    MaskDecoder,
+    PromptEncoder,
+    Sam,
+    TwoWayTransformer,
+)
 from .modeling.image_encoder_hq import ImageEncoderViTHQ
 from .modeling.mask_decoder import MaskDecoderHQ
 from .modeling.sam_hq import SamHQ

@@ -5,8 +5,13 @@ from PIL import Image
 from sorawm.iopaint.helper import encode_pil_to_base64
 from sorawm.iopaint.model_manager import ModelManager
 from sorawm.iopaint.schema import HDStrategy
-from sorawm.iopaint.tests.utils import (check_device, current_dir, get_config,
-                                        get_data, save_dir)
+from sorawm.iopaint.tests.utils import (
+    check_device,
+    current_dir,
+    get_config,
+    get_data,
+    save_dir,
+)
 
 model_name = "Fantasy-Studio/Paint-by-Example"
 

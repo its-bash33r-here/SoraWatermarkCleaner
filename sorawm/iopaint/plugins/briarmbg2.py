@@ -10,8 +10,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
-from torchvision.models import (ResNet50_Weights, VGG16_BN_Weights,
-                                VGG16_Weights, resnet50, vgg16, vgg16_bn)
+from torchvision.models import (
+    ResNet50_Weights,
+    VGG16_BN_Weights,
+    VGG16_Weights,
+    resnet50,
+    vgg16,
+    vgg16_bn,
+)
 from transformers import PretrainedConfig, PreTrainedModel
 
 

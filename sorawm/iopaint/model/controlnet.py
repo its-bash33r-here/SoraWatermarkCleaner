@@ -7,14 +7,21 @@ from loguru import logger
 from sorawm.iopaint.schema import InpaintRequest, ModelType
 
 from .base import DiffusionInpaintModel
-from .helper.controlnet_preprocess import (make_canny_control_image,
-                                           make_depth_control_image,
-                                           make_inpaint_control_image,
-                                           make_openpose_control_image)
+from .helper.controlnet_preprocess import (
+    make_canny_control_image,
+    make_depth_control_image,
+    make_inpaint_control_image,
+    make_openpose_control_image,
+)
 from .helper.cpu_text_encoder import CPUTextEncoderWrapper
 from .original_sd_configs import get_config_files
-from .utils import (enable_low_mem, get_scheduler, get_torch_dtype,
-                    handle_from_pretrained_exceptions, is_local_files_only)
+from .utils import (
+    enable_low_mem,
+    get_scheduler,
+    get_torch_dtype,
+    handle_from_pretrained_exceptions,
+    is_local_files_only,
+)
 
 
 class ControlNet(DiffusionInpaintModel):
@@ -70,8 +77,7 @@ class ControlNet(DiffusionInpaintModel):
             ModelType.DIFFUSERS_SD,
             ModelType.DIFFUSERS_SD_INPAINT,
         ]:
-            from diffusers import \
-                StableDiffusionControlNetInpaintPipeline as PipeClass
+            from diffusers import StableDiffusionControlNetInpaintPipeline as PipeClass
 
             original_config_file_name = "v1"
 
@@ -79,8 +85,9 @@ class ControlNet(DiffusionInpaintModel):
             ModelType.DIFFUSERS_SDXL,
             ModelType.DIFFUSERS_SDXL_INPAINT,
         ]:
-            from diffusers import \
-                StableDiffusionXLControlNetInpaintPipeline as PipeClass
+            from diffusers import (
+                StableDiffusionXLControlNetInpaintPipeline as PipeClass,
+            )
 
             original_config_file_name = "xl"
 

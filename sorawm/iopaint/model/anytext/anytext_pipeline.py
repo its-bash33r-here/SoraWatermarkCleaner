@@ -21,10 +21,8 @@ import torch
 from PIL import ImageFont
 
 from sorawm.iopaint.model.anytext.cldm.ddim_hacked import DDIMSampler
-from sorawm.iopaint.model.anytext.cldm.model import (create_model,
-                                                     load_state_dict)
-from sorawm.iopaint.model.anytext.utils import (check_channels, draw_glyph,
-                                                draw_glyph2)
+from sorawm.iopaint.model.anytext.cldm.model import create_model, load_state_dict
+from sorawm.iopaint.model.anytext.utils import check_channels, draw_glyph, draw_glyph2
 
 BBOX_MAX_NUM = 8
 PLACE_HOLDER = "*"

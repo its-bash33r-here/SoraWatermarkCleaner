@@ -12,8 +12,7 @@ import torch
 from .modeling.backbones.hieradet import Hiera
 from .modeling.backbones.image_encoder import FpnNeck, ImageEncoder
 from .modeling.memory_attention import MemoryAttention, MemoryAttentionLayer
-from .modeling.memory_encoder import (CXBlock, Fuser, MaskDownSampler,
-                                      MemoryEncoder)
+from .modeling.memory_encoder import CXBlock, Fuser, MaskDownSampler, MemoryEncoder
 from .modeling.position_encoding import PositionEmbeddingSine
 from .modeling.sam2_base import SAM2Base
 from .modeling.sam.transformer import RoPEAttention

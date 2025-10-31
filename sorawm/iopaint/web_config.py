@@ -8,8 +8,13 @@ from pathlib import Path
 mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
 
-from sorawm.iopaint.schema import (ApiConfig, Device, InteractiveSegModel,
-                                   RealESRGANModel, RemoveBGModel)
+from sorawm.iopaint.schema import (
+    ApiConfig,
+    Device,
+    InteractiveSegModel,
+    RealESRGANModel,
+    RemoveBGModel,
+)
 
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
 

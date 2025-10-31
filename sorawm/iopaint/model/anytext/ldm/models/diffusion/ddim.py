@@ -5,8 +5,11 @@ import torch
 from tqdm import tqdm
 
 from sorawm.iopaint.model.anytext.ldm.modules.diffusionmodules.util import (
-    extract_into_tensor, make_ddim_sampling_parameters, make_ddim_timesteps,
-    noise_like)
+    extract_into_tensor,
+    make_ddim_sampling_parameters,
+    make_ddim_timesteps,
+    noise_like,
+)
 
 
 class DDIMSampler(object):

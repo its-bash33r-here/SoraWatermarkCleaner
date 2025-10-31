@@ -32,22 +32,36 @@ from PIL import Image
 from socketio import AsyncServer
 
 from sorawm.iopaint.file_manager import FileManager
-from sorawm.iopaint.helper import (adjust_mask, concat_alpha_channel,
-                                   decode_base64_to_image, gen_frontend_mask,
-                                   load_img, numpy_to_bytes, pil_to_bytes)
+from sorawm.iopaint.helper import (
+    adjust_mask,
+    concat_alpha_channel,
+    decode_base64_to_image,
+    gen_frontend_mask,
+    load_img,
+    numpy_to_bytes,
+    pil_to_bytes,
+)
 from sorawm.iopaint.model.utils import torch_gc
 from sorawm.iopaint.model_manager import ModelManager
-from sorawm.iopaint.plugins import (InteractiveSeg, RealESRGANUpscaler,
-                                    build_plugins)
+from sorawm.iopaint.plugins import InteractiveSeg, RealESRGANUpscaler, build_plugins
 from sorawm.iopaint.plugins.base_plugin import BasePlugin
 from sorawm.iopaint.plugins.remove_bg import RemoveBG
-from sorawm.iopaint.schema import (AdjustMaskRequest, ApiConfig,
-                                   GenInfoResponse, InpaintRequest,
-                                   InteractiveSegModel, ModelInfo, PluginInfo,
-                                   RealESRGANModel, RemoveBGModel,
-                                   RunPluginRequest, SDSampler,
-                                   ServerConfigResponse, SwitchModelRequest,
-                                   SwitchPluginModelRequest)
+from sorawm.iopaint.schema import (
+    AdjustMaskRequest,
+    ApiConfig,
+    GenInfoResponse,
+    InpaintRequest,
+    InteractiveSegModel,
+    ModelInfo,
+    PluginInfo,
+    RealESRGANModel,
+    RemoveBGModel,
+    RunPluginRequest,
+    SDSampler,
+    ServerConfigResponse,
+    SwitchModelRequest,
+    SwitchPluginModelRequest,
+)
 
 CURRENT_DIR = Path(__file__).parent.absolute().resolve()
 WEB_APP_DIR = CURRENT_DIR / "web_app"

@@ -2,8 +2,12 @@ import os
 
 from loguru import logger
 
-from sorawm.iopaint.tests.utils import (assert_equal, check_device,
-                                        current_dir, get_config)
+from sorawm.iopaint.tests.utils import (
+    assert_equal,
+    check_device,
+    current_dir,
+    get_config,
+)
 
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 

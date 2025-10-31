@@ -5,8 +5,7 @@ import numpy as np
 import pytest
 import torch
 
-from sorawm.iopaint.schema import (HDStrategy, InpaintRequest, LDMSampler,
-                                   SDSampler)
+from sorawm.iopaint.schema import HDStrategy, InpaintRequest, LDMSampler, SDSampler
 
 current_dir = Path(__file__).parent.absolute().resolve()
 save_dir = current_dir / "result"

@@ -6,11 +6,17 @@ from typing import List, Literal, Optional
 from loguru import logger
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from sorawm.iopaint.const import (ANYTEXT_NAME, INSTRUCT_PIX2PIX_NAME,
-                                  KANDINSKY22_NAME, POWERPAINT_NAME,
-                                  SD2_CONTROLNET_CHOICES, SD_BRUSHNET_CHOICES,
-                                  SD_CONTROLNET_CHOICES, SDXL_BRUSHNET_CHOICES,
-                                  SDXL_CONTROLNET_CHOICES)
+from sorawm.iopaint.const import (
+    ANYTEXT_NAME,
+    INSTRUCT_PIX2PIX_NAME,
+    KANDINSKY22_NAME,
+    POWERPAINT_NAME,
+    SD2_CONTROLNET_CHOICES,
+    SD_BRUSHNET_CHOICES,
+    SD_CONTROLNET_CHOICES,
+    SDXL_BRUSHNET_CHOICES,
+    SDXL_CONTROLNET_CHOICES,
+)
 
 
 class ModelType(str, Enum):

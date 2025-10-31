@@ -11,8 +11,12 @@ from sorawm.iopaint.schema import InpaintRequest, ModelType
 from .base import DiffusionInpaintModel
 from .helper.cpu_text_encoder import CPUTextEncoderWrapper
 from .original_sd_configs import get_config_files
-from .utils import (enable_low_mem, get_torch_dtype,
-                    handle_from_pretrained_exceptions, is_local_files_only)
+from .utils import (
+    enable_low_mem,
+    get_torch_dtype,
+    handle_from_pretrained_exceptions,
+    is_local_files_only,
+)
 
 
 class SDXL(DiffusionInpaintModel):

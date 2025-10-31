@@ -8,15 +8,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 
-from sorawm.iopaint.helper import (download_model, get_cache_path_by_url,
-                                   load_model, norm_img)
+from sorawm.iopaint.helper import (
+    download_model,
+    get_cache_path_by_url,
+    load_model,
+    norm_img,
+)
 from sorawm.iopaint.schema import InpaintRequest
 
 from .base import InpaintModel
-from .utils import (Conv2dLayer, FullyConnectedLayer, MinibatchStdLayer,
-                    activation_funcs, bias_act, conv2d_resample,
-                    normalize_2nd_moment, set_seed, setup_filter, to_2tuple,
-                    upsample2d)
+from .utils import (
+    Conv2dLayer,
+    FullyConnectedLayer,
+    MinibatchStdLayer,
+    activation_funcs,
+    bias_act,
+    conv2d_resample,
+    normalize_2nd_moment,
+    set_seed,
+    setup_filter,
+    to_2tuple,
+    upsample2d,
+)
 
 
 class ModulatedConv2d(nn.Module):

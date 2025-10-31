@@ -16,8 +16,13 @@ from typing import Any, Dict, Optional, Tuple, Union
 import torch
 import torch.utils.checkpoint
 from diffusers.models.unets.unet_2d_condition import UNet2DConditionOutput
-from diffusers.utils import (USE_PEFT_BACKEND, deprecate, logging,
-                             scale_lora_layers, unscale_lora_layers)
+from diffusers.utils import (
+    USE_PEFT_BACKEND,
+    deprecate,
+    logging,
+    scale_lora_layers,
+    unscale_lora_layers,
+)
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

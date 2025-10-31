@@ -8,16 +8,31 @@ import torch.fft as fft
 import torch.nn.functional as F
 from torch import conv2d, nn
 
-from sorawm.iopaint.helper import (boxes_from_mask, download_model,
-                                   get_cache_path_by_url, load_model, norm_img,
-                                   resize_max_size)
+from sorawm.iopaint.helper import (
+    boxes_from_mask,
+    download_model,
+    get_cache_path_by_url,
+    load_model,
+    norm_img,
+    resize_max_size,
+)
 from sorawm.iopaint.schema import InpaintRequest
 
 from .base import InpaintModel
-from .utils import (Conv2dLayer, FullyConnectedLayer, MinibatchStdLayer,
-                    _parse_padding, _parse_scaling, activation_funcs, bias_act,
-                    conv2d_resample, downsample2d, normalize_2nd_moment,
-                    setup_filter, upsample2d)
+from .utils import (
+    Conv2dLayer,
+    FullyConnectedLayer,
+    MinibatchStdLayer,
+    _parse_padding,
+    _parse_scaling,
+    activation_funcs,
+    bias_act,
+    conv2d_resample,
+    downsample2d,
+    normalize_2nd_moment,
+    setup_filter,
+    upsample2d,
+)
 
 
 def upfirdn2d(x, f, up=1, down=1, padding=0, flip_filter=False, gain=1, impl="cuda"):

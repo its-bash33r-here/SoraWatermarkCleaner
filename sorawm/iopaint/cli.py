@@ -10,10 +10,13 @@ from typer import Option
 from typer_config import use_json_config
 
 from sorawm.iopaint.const import *
-from sorawm.iopaint.runtime import (check_device, dump_environment_info,
-                                    setup_model_dir)
-from sorawm.iopaint.schema import (Device, InteractiveSegModel,
-                                   RealESRGANModel, RemoveBGModel)
+from sorawm.iopaint.runtime import check_device, dump_environment_info, setup_model_dir
+from sorawm.iopaint.schema import (
+    Device,
+    InteractiveSegModel,
+    RealESRGANModel,
+    RemoveBGModel,
+)
 
 typer_app = typer.Typer(pretty_exceptions_show_locals=False, add_completion=False)
 

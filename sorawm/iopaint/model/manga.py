@@ -7,8 +7,7 @@ import numpy as np
 import torch
 from loguru import logger
 
-from sorawm.iopaint.helper import (download_model, get_cache_path_by_url,
-                                   load_jit_model)
+from sorawm.iopaint.helper import download_model, get_cache_path_by_url, load_jit_model
 from sorawm.iopaint.schema import InpaintRequest
 
 from .base import InpaintModel

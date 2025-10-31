@@ -6,8 +6,12 @@ import numpy as np
 import torch
 from loguru import logger
 
-from sorawm.iopaint.helper import (boxes_from_mask, pad_img_to_modulo,
-                                   resize_max_size, switch_mps_device)
+from sorawm.iopaint.helper import (
+    boxes_from_mask,
+    pad_img_to_modulo,
+    resize_max_size,
+    switch_mps_device,
+)
 from sorawm.iopaint.schema import HDStrategy, InpaintRequest, SDSampler
 
 from .helper.g_diffuser_bot import expand_image

@@ -7,36 +7,53 @@ import PIL.Image
 import torch
 import torch.nn.functional as F
 from diffusers.image_processor import PipelineImageInput, VaeImageProcessor
-from diffusers.loaders import (FromSingleFileMixin, IPAdapterMixin,
-                               StableDiffusionXLLoraLoaderMixin,
-                               TextualInversionLoaderMixin)
-from diffusers.models import (AutoencoderKL, ImageProjection,
-                              UNet2DConditionModel)
-from diffusers.models.attention_processor import (AttnProcessor2_0,
-                                                  LoRAAttnProcessor2_0,
-                                                  LoRAXFormersAttnProcessor,
-                                                  XFormersAttnProcessor)
+from diffusers.loaders import (
+    FromSingleFileMixin,
+    IPAdapterMixin,
+    StableDiffusionXLLoraLoaderMixin,
+    TextualInversionLoaderMixin,
+)
+from diffusers.models import AutoencoderKL, ImageProjection, UNet2DConditionModel
+from diffusers.models.attention_processor import (
+    AttnProcessor2_0,
+    LoRAAttnProcessor2_0,
+    LoRAXFormersAttnProcessor,
+    XFormersAttnProcessor,
+)
 from diffusers.models.lora import adjust_lora_scale_text_encoder
-from diffusers.pipelines.pipeline_utils import (DiffusionPipeline,
-                                                StableDiffusionMixin)
-from diffusers.pipelines.stable_diffusion_xl.pipeline_output import \
-    StableDiffusionXLPipelineOutput
+from diffusers.pipelines.pipeline_utils import DiffusionPipeline, StableDiffusionMixin
+from diffusers.pipelines.stable_diffusion_xl.pipeline_output import (
+    StableDiffusionXLPipelineOutput,
+)
 from diffusers.schedulers import KarrasDiffusionSchedulers
-from diffusers.utils import (USE_PEFT_BACKEND, deprecate, logging,
-                             replace_example_docstring, scale_lora_layers,
-                             unscale_lora_layers)
+from diffusers.utils import (
+    USE_PEFT_BACKEND,
+    deprecate,
+    logging,
+    replace_example_docstring,
+    scale_lora_layers,
+    unscale_lora_layers,
+)
 from diffusers.utils.import_utils import is_invisible_watermark_available
-from diffusers.utils.torch_utils import (is_compiled_module, is_torch_version,
-                                         randn_tensor)
-from transformers import (CLIPImageProcessor, CLIPTextModel,
-                          CLIPTextModelWithProjection, CLIPTokenizer,
-                          CLIPVisionModelWithProjection)
+from diffusers.utils.torch_utils import (
+    is_compiled_module,
+    is_torch_version,
+    randn_tensor,
+)
+from transformers import (
+    CLIPImageProcessor,
+    CLIPTextModel,
+    CLIPTextModelWithProjection,
+    CLIPTokenizer,
+    CLIPVisionModelWithProjection,
+)
 
 from .brushnet import BrushNetModel
 
 if is_invisible_watermark_available():
-    from diffusers.pipelines.stable_diffusion_xl.watermark import \
-        StableDiffusionXLWatermarker
+    from diffusers.pipelines.stable_diffusion_xl.watermark import (
+        StableDiffusionXLWatermarker,
+    )
 
 # from .multibrushnet import MultiBrushNetModel
 

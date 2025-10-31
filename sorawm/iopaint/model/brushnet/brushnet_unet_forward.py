@@ -2,8 +2,12 @@ from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 from diffusers.models.unets.unet_2d_condition import UNet2DConditionOutput
-from diffusers.utils import (USE_PEFT_BACKEND, deprecate, scale_lora_layers,
-                             unscale_lora_layers)
+from diffusers.utils import (
+    USE_PEFT_BACKEND,
+    deprecate,
+    scale_lora_layers,
+    unscale_lora_layers,
+)
 
 
 def brushnet_unet_forward(

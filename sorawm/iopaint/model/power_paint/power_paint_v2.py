@@ -12,13 +12,20 @@ from sorawm.iopaint.schema import InpaintRequest, ModelType
 
 from ..base import DiffusionInpaintModel
 from ..helper.cpu_text_encoder import CPUTextEncoderWrapper
-from ..utils import (enable_low_mem, get_torch_dtype,
-                     handle_from_pretrained_exceptions, is_local_files_only)
+from ..utils import (
+    enable_low_mem,
+    get_torch_dtype,
+    handle_from_pretrained_exceptions,
+    is_local_files_only,
+)
 from .powerpaint_tokenizer import task_to_prompt
 from .v2.BrushNet_CA import BrushNetModel
-from .v2.unet_2d_blocks import (CrossAttnDownBlock2D_forward,
-                                CrossAttnUpBlock2D_forward,
-                                DownBlock2D_forward, UpBlock2D_forward)
+from .v2.unet_2d_blocks import (
+    CrossAttnDownBlock2D_forward,
+    CrossAttnUpBlock2D_forward,
+    DownBlock2D_forward,
+    UpBlock2D_forward,
+)
 from .v2.unet_2d_condition import UNet2DConditionModel_forward
 
 
@@ -30,8 +37,9 @@ class PowerPaintV2(DiffusionInpaintModel):
 
     def init_model(self, device: torch.device, **kwargs):
         from .powerpaint_tokenizer import PowerPaintTokenizer
-        from .v2.pipeline_PowerPaint_Brushnet_CA import \
-            StableDiffusionPowerPaintBrushNetPipeline
+        from .v2.pipeline_PowerPaint_Brushnet_CA import (
+            StableDiffusionPowerPaintBrushNetPipeline,
+        )
 
         use_gpu, torch_dtype = get_torch_dtype(device, kwargs.get("no_half", False))
         model_kwargs = {"local_files_only": is_local_files_only(**kwargs)}

@@ -7,9 +7,15 @@ import numpy as np
 from loguru import logger
 from PIL import Image
 from rich.console import Console
-from rich.progress import (BarColumn, MofNCompleteColumn, Progress,
-                           SpinnerColumn, TaskProgressColumn, TextColumn,
-                           TimeElapsedColumn)
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 
 from sorawm.iopaint.helper import pil_to_bytes
 from sorawm.iopaint.model.utils import torch_gc

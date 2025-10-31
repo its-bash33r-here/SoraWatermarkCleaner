@@ -8,8 +8,12 @@ from sorawm.iopaint.schema import InpaintRequest, ModelType
 from .base import DiffusionInpaintModel
 from .helper.cpu_text_encoder import CPUTextEncoderWrapper
 from .original_sd_configs import get_config_files
-from .utils import (enable_low_mem, get_torch_dtype,
-                    handle_from_pretrained_exceptions, is_local_files_only)
+from .utils import (
+    enable_low_mem,
+    get_torch_dtype,
+    handle_from_pretrained_exceptions,
+    is_local_files_only,
+)
 
 
 class SD(DiffusionInpaintModel):
@@ -18,8 +22,7 @@ class SD(DiffusionInpaintModel):
     lcm_lora_id = "latent-consistency/lcm-lora-sdv1-5"
 
     def init_model(self, device: torch.device, **kwargs):
-        from diffusers.pipelines.stable_diffusion import \
-            StableDiffusionInpaintPipeline
+        from diffusers.pipelines.stable_diffusion import StableDiffusionInpaintPipeline
 
         use_gpu, torch_dtype = get_torch_dtype(device, kwargs.get("no_half", False))
 

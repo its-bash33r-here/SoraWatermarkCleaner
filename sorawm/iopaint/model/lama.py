@@ -4,8 +4,12 @@ import cv2
 import numpy as np
 import torch
 
-from sorawm.iopaint.helper import (download_model, get_cache_path_by_url,
-                                   load_jit_model, norm_img)
+from sorawm.iopaint.helper import (
+    download_model,
+    get_cache_path_by_url,
+    load_jit_model,
+    norm_img,
+)
 from sorawm.iopaint.schema import InpaintRequest
 
 from .base import InpaintModel

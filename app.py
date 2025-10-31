@@ -51,7 +51,7 @@ def main():
                     # Create progress bar and status text
                     progress_bar = st.progress(0)
                     status_text = st.empty()
-                    
+
                     def update_progress(progress: int):
                         progress_bar.progress(progress / 100)
                         if progress < 50:
@@ -60,12 +60,12 @@ def main():
                             status_text.text(f"🧹 Removing watermarks... {progress}%")
                         else:
                             status_text.text(f"🎵 Merging audio... {progress}%")
-                    
+
                     # Run the watermark removal with progress callback
                     st.session_state.sora_wm.run(
                         input_path, output_path, progress_callback=update_progress
                     )
-                    
+
                     # Complete the progress bar
                     progress_bar.progress(100)
                     status_text.text("✅ Processing complete!")

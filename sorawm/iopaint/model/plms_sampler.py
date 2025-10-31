@@ -3,8 +3,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from .utils import (make_ddim_sampling_parameters, make_ddim_timesteps,
-                    noise_like)
+from .utils import make_ddim_sampling_parameters, make_ddim_timesteps, noise_like
 
 
 class PLMSSampler(object):
