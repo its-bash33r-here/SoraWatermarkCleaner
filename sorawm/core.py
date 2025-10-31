@@ -1,3 +1,6 @@
+"""
+sorawm/core.py
+"""
 from pathlib import Path
 from typing import Callable
 import threading
@@ -15,6 +18,7 @@ from sorawm.utils.imputation_utils import (
     get_interval_average_bbox,
     find_idxs_interval,
 )
+from sorawm.pipeline_manager import PipelineManager
 
 
 class SoraWM:
@@ -180,155 +184,9 @@ class SoraWM:
             output_video_path: Output video path
             progress_callback: Progress callback function
         """
-        input_video_loader = VideoLoader(input_video_path)
-        output_video_path.parent.mkdir(parents=True, exist_ok=True)
-        width = input_video_loader.width
-        height = input_video_loader.height
-        fps = input_video_loader.fps
-        total_frames = input_video_loader.total_frames
-
-        logger.debug(
-            f"Total frames: {total_frames}, FPS: {fps}, Width: {width}, Height: {height}"
-        )
-
-        # Create pipeline manager
-        pipeline = PipelineManager(width=width, height=height, queue_size=30)
-
-        # Prepare video output
-        temp_output_path = output_video_path.parent / f"temp_{output_video_path.name}"
-        output_options = {
-            "pix_fmt": "yuv420p",
-            "vcodec": "libx264",
-            "preset": "slow",
-        }
-
-        if input_video_loader.original_bitrate:
-            output_options["video_bitrate"] = str(int(int(input_video_loader.original_bitrate) * 1.2))
-        else:
-            output_options["crf"] = "18"
-
-        process_out = (
-            ffmpeg.input(
-                "pipe:",
-                format="rawvideo",
-                pix_fmt="bgr24",
-                s=f"{width}x{height}",
-                r=fps,
-            )
-            .output(str(temp_output_path), **output_options)
-            .overwrite_output()
-            .global_args("-loglevel", "error")
-            .run_async(pipe_stdin=True)
-        )
-
-        try:
-            # Use threading to overlap input and output operations
-            frame_buffer = {}  # Buffer for out-of-order frames
-            next_frame_idx = 0
-            received_count = 0
-            input_error = None
-            output_error = None
-            
-            def input_worker():
-                """Thread to feed frames into pipeline"""
-                nonlocal input_error
-                try:
-                    logger.info("[Pipeline] Starting input worker thread...")
-                    for idx, frame in enumerate(input_video_loader):
-                        pipeline.put_frame(idx, frame, timeout=30.0)
-                        if progress_callback and idx % 10 == 0:
-                            progress = 10 + int((idx / total_frames) * 20)
-                            progress_callback(progress)
-                    
-                    # Signal end of input
-                    pipeline.signal_end()
-                    logger.info("[Pipeline] Input worker: All frames fed")
-                except Exception as e:
-                    input_error = e
-                    logger.error(f"[Pipeline] Input worker error: {e}")
-            
-            def output_worker():
-                """Thread to receive cleaned frames and write to video"""
-                nonlocal next_frame_idx, received_count, output_error
-                try:
-                    logger.info("[Pipeline] Starting output worker thread...")
-                    with tqdm(total=total_frames, desc="Processing frames") as pbar:
-                        while received_count < total_frames:
-                            result = pipeline.get_cleaned_frame(timeout=30.0)
-                            if result is None:  # End signal
-                                break
-
-                            idx, cleaned_frame = result
-                            frame_buffer[idx] = cleaned_frame
-                            received_count += 1
-                            
-                            # Write frames in order
-                            while next_frame_idx in frame_buffer:
-                                process_out.stdin.write(frame_buffer[next_frame_idx].tobytes())
-                                del frame_buffer[next_frame_idx]
-                                next_frame_idx += 1
-                                pbar.update(1)
-
-                                if progress_callback and next_frame_idx % 10 == 0:
-                                    progress = 30 + int((next_frame_idx / total_frames) * 65)
-                                    progress_callback(progress)
-                    
-                    logger.info(f"[Pipeline] Output worker: Processed {next_frame_idx} frames total")
-                except Exception as e:
-                    output_error = e
-                    logger.error(f"[Pipeline] Output worker error: {e}")
-            
-            # Start both threads
-            input_thread = threading.Thread(target=input_worker, name="InputWorker")
-            output_thread = threading.Thread(target=output_worker, name="OutputWorker")
-            
-            input_thread.start()
-            output_thread.start()
-            
-            # Wait for both threads to complete
-            input_thread.join()
-            output_thread.join()
-            
-            # Check for errors
-            if input_error:
-                raise input_error
-            if output_error:
-                raise output_error
-
-            process_out.stdin.close()
-            process_out.wait()
-
-            if progress_callback:
-                progress_callback(95)
-
-            # Stage 3: Merge audio track (95% - 99%)
-            self.merge_audio_track(input_video_path, temp_output_path, output_video_path)
-
-            if progress_callback:
-                progress_callback(99)
-
-        finally:
-            # Ensure pipeline is properly shutdown
-            pipeline.shutdown()
-
-    def merge_audio_track(
-        self, input_video_path: Path, temp_output_path: Path, output_video_path: Path
-    ):
-        logger.info("Merging audio track...")
-        video_stream = ffmpeg.input(str(temp_output_path))
-        audio_stream = ffmpeg.input(str(input_video_path)).audio
-
-        (
-            ffmpeg.output(
-                video_stream,
-                audio_stream,
-                str(output_video_path),
-                vcodec="copy",
-                acodec="aac",
-            )
-            .overwrite_output()
-            .run(quiet=True)
-        )
+        pipeline_manager = PipelineManager()
+        temp_output_path = pipeline_manager.run_pipeline(input_video_path, output_video_path, progress_callback)
+        self.merge_audio_track(input_video_path, temp_output_path, output_video_path)
         # Clean up temporary file
         temp_output_path.unlink()
         logger.info(f"Saved no watermark video with audio at: {output_video_path}")
