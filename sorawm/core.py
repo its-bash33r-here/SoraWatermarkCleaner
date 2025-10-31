@@ -3,7 +3,6 @@ sorawm/core.py
 """
 from pathlib import Path
 from typing import Callable
-import threading
 
 import ffmpeg
 import numpy as np
@@ -26,7 +25,7 @@ class SoraWM:
         self.detector = SoraWaterMarkDetector()
         self.cleaner = WaterMarkCleaner()
 
-    def run(
+    def run_sync(
         self,
         input_video_path: Path,
         output_video_path: Path,
@@ -80,7 +79,7 @@ class SoraWM:
         ):
             detection_result = self.detector.detect(frame)
             if detection_result["detected"]:
-                frame_bboxes[idx] = { "bbox": detection_result["bbox"]}
+                frame_bboxes[idx] = {"bbox": detection_result["bbox"]}
                 x1, y1, x2, y2 = detection_result["bbox"]
                 bbox_centers.append((int((x1 + x2) / 2), int((y1 + y2) / 2)))
                 bboxes.append((x1, y1, x2, y2))
@@ -121,8 +120,10 @@ class SoraWM:
                     and interval_bboxes[interval_idx] is not None
                 ):
                     frame_bboxes[missed_idx]["bbox"] = interval_bboxes[interval_idx]
-                    logger.debug(f"Filled missed frame {missed_idx} with bbox:\n"
-                    f" {interval_bboxes[interval_idx]}")
+                    logger.debug(
+                        f"Filled missed frame {missed_idx} with bbox:\n"
+                        f" {interval_bboxes[interval_idx]}"
+                    )
                 else:
                     # if the interval has no valid bbox, use the previous and next frame to complete (fallback strategy)
                     before = max(missed_idx - 1, 0)
@@ -137,12 +138,14 @@ class SoraWM:
             del bboxes
             del bbox_centers
             del detect_missed
-        
+
         input_video_loader = VideoLoader(input_video_path)
 
-        for idx, frame in enumerate(tqdm(input_video_loader, total=total_frames, desc="Remove watermarks")):
-        # for idx in tqdm(range(total_frames), desc="Remove watermarks"):
-            # frame_info = 
+        for idx, frame in enumerate(
+            tqdm(input_video_loader, total=total_frames, desc="Remove watermarks")
+        ):
+            # for idx in tqdm(range(total_frames), desc="Remove watermarks"):
+            # frame_info =
             bbox = frame_bboxes[idx]["bbox"]
             if bbox is not None:
                 x1, y1, x2, y2 = bbox
@@ -178,15 +181,48 @@ class SoraWM:
     ):
         """
         Run with pipeline architecture for overlapping detection and cleaning to improve GPU utilization.
-        
+
         Args:
             input_video_path: Input video path
             output_video_path: Output video path
             progress_callback: Progress callback function
         """
         pipeline_manager = PipelineManager()
-        temp_output_path = pipeline_manager.run_pipeline(input_video_path, output_video_path, progress_callback)
+        temp_output_path = pipeline_manager.run_pipeline(
+            input_video_path, output_video_path, progress_callback
+        )
         self.merge_audio_track(input_video_path, temp_output_path, output_video_path)
+
+    def run(
+        self,
+        input_video_path: Path,
+        output_video_path: Path,
+        progress_callback: Callable[[int], None] | None = None,
+        overlap_running: bool = False,
+    ):
+        if overlap_running:
+            self.run_overlap(input_video_path, output_video_path, progress_callback)
+        else:
+            self.run_sync(input_video_path, output_video_path, progress_callback)
+
+    def merge_audio_track(
+        self, input_video_path: Path, temp_output_path: Path, output_video_path: Path
+    ):
+        logger.info("Merging audio track...")
+        video_stream = ffmpeg.input(str(temp_output_path))
+        audio_stream = ffmpeg.input(str(input_video_path)).audio
+
+        (
+            ffmpeg.output(
+                video_stream,
+                audio_stream,
+                str(output_video_path),
+                vcodec="copy",
+                acodec="aac",
+            )
+            .overwrite_output()
+            .run(quiet=True)
+        )
         # Clean up temporary file
         temp_output_path.unlink()
         logger.info(f"Saved no watermark video with audio at: {output_video_path}")

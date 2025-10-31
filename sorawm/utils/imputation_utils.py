@@ -33,7 +33,7 @@ def get_interval_average_bbox(
 def find_idxs_interval(idxs: List[int], bkps: List[int]) -> List[int]:
     def _find_idx_interval(_idx: int) -> int:
         left = 0
-        right = len(bkps) - 2 
+        right = len(bkps) - 2
 
         while left <= right:
             mid = (left + right) // 2
