@@ -217,9 +217,9 @@ outputs
 yolo11n.pt
 yolo11s.pt
 best.pt
+**/best.pt
 
 .claude
-best.pt
 
 runs
 .idea
@@ -231,3 +231,5 @@ python
 ffmpeg/*
 !ffmpeg/.gitkeep
 # !ffmpeg/README.md
+resources/best.pt
+resources/model_version.json
