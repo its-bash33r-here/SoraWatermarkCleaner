@@ -13,7 +13,13 @@ https://github.com/user-attachments/assets/8cdc075e-7d15-4d04-8fa2-53dd287e5f4c
 
 https://github.com/user-attachments/assets/3c850ff1-b8e3-41af-a46f-2c734406e77d
 
-⭐️: **YOLO 权重已更新，请尝试新版本的水印检测模型，效果会更好。另外，我们已经将标注好的数据集上传到了 Hugging Face，请查看 https://huggingface.co/datasets/LLinked/sora-watermark-dataset。欢迎训练你自己的检测模型或改进我们的模型！**
+⭐️: 
+
+1. **YOLO 权重已更新** — 请尝试新版本的水印检测模型，效果会更好！
+
+2. **数据集已开源** — 我们已经将标注好的数据集上传到了 Hugging Face，查看[此数据集](https://huggingface.co/datasets/LLinked/sora-watermark-dataset)。欢迎训练你自己的检测模型或改进我们的模型！
+
+3. **一键便携版已发布** — [点击这里下载](#3-一键便携版)，Windows 用户无需安装即可使用！
 
 
 ## 1. 方法
@@ -31,9 +37,6 @@ SoraWatermarkCleaner（后面我们简称为 `SoraWm`）由两部分组成：
 
 
 ## 2. 安装
-
-### 2.1 标准安装
-
 视频处理需要 [FFmpeg](https://ffmpeg.org/)，请先安装它。我们强烈推荐使用 `uv` 来安装环境：
 
 1. 安装：
@@ -52,36 +55,28 @@ uv sync
 
 训练好的 YOLO 权重将存储在 `resources` 目录中，文件名为 `best.pt`。它将从 https://github.com/linkedlist771/SoraWatermarkCleaner/releases/download/V0.0.1/best.pt 自动下载。`Lama` 模型从 https://github.com/Sanster/models/releases/download/add_big_lama/big-lama.pt 下载，并将存储在 torch 缓存目录中。两者都是自动下载的，如果失败，请检查你的网络状态。
 
-### 2.2 Windows 便携版配置
+## 3. 一键便携版
 
-如果你使用 Python Standalone 打包的便携版本，需要配置本地的 FFmpeg：
+对于不想手动安装的用户，我们提供了**一键便携版本**，包含所有预配置的依赖项，开箱即用。
 
-1. **下载 FFmpeg**：
-   - 访问：https://github.com/BtbN/FFmpeg-Builds/releases
-   - 下载最新的 `ffmpeg-master-latest-win64-gpl.zip`
-   - 解压缩文件
+### 下载链接
 
-2. **放置 FFmpeg 文件**：
-   - 将解压后的 `bin/ffmpeg.exe` 复制到项目的 `ffmpeg/` 目录
-   - 将解压后的 `bin/ffprobe.exe` 复制到项目的 `ffmpeg/` 目录
-   
-   最终目录结构：
-   ```
-   SoraWatermarkCleaner/
-   ├── ffmpeg/
-   │   ├── ffmpeg.exe
-   │   └── ffprobe.exe
-   ├── python/
-   └── ...
-   ```
+**Google Drive（谷歌云盘）：**
+- [从 Google Drive 下载](https://drive.google.com/file/d/1ujH28aHaCXGgB146g6kyfz3Qxd-wHR1c/view?usp=share_link)
 
-3. **验证配置**：
-   - 程序启动时会自动检测并使用 `ffmpeg/` 目录中的 FFmpeg
-   - 如果检测到本地 FFmpeg，将在日志中显示 "✓ FFmpeg已就绪"
+**百度网盘（推荐国内用户使用）：**
+- 链接：https://pan.baidu.com/s/1i4exYsPvXv0evnGs5MWcYA?pwd=3jr6
+- 提取码：`3jr6`
 
-> **注意**：程序会优先使用本地 `ffmpeg/` 目录中的 FFmpeg，如果没有找到，则使用系统环境变量中的 FFmpeg。
+### 特点
+- ✅ 无需安装
+- ✅ 包含所有依赖
+- ✅ 预配置环境
+- ✅ 开箱即用
 
-## 3. 演示
+只需下载、解压并运行！
+
+## 4. 演示
 
 基本用法，只需尝试 `example.py`：
 
@@ -109,7 +104,7 @@ streamlit run app.py
 
 <img src="resources/app.png" style="zoom: 25%;" />
 
-## 4. WebServer
+## 5. WebServer
 
 在这里，我们提供了一个基于 FastAPI 的 Web 服务器，可以快速将这个水印清除器转换为服务。
 
@@ -135,22 +130,22 @@ Web 服务器将在端口 `5344` 启动，你可以查看 FastAPI [文档](http:
 
 你可以使用第2步中的下载 URL 来获取清理后的视频。
 
-## 5. 数据集
+## 6. 数据集
 
 我们已经将标注好的数据集上传到了 Hugging Face，请查看 https://huggingface.co/datasets/LLinked/sora-watermark-dataset。欢迎训练你自己的检测模型或改进我们的模型！
 
 
 
-## 6. API
+## 7. API
 
 打包为 Cog 并[发布到 Replicate](https://replicate.com/uglyrobot/sora2-watermark-remover)，便于基于 API 的简单使用。
 
-## 7. 许可证
+## 8. 许可证
 
 Apache License
 
 
-## 8. 引用
+## 9. 引用
 
 如果你使用了这个项目，请引用：
 
@@ -163,7 +158,7 @@ Apache License
 }
 ```
 
-## 9. 致谢
+## 10. 致谢
 
 - [IOPaint](https://github.com/Sanster/IOPaint) 提供的 LAMA 实现
 - [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) 提供的目标检测
