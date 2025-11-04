@@ -29,9 +29,11 @@ class WaterMarkCleaner:
         self.model_manager = ModelManager(name=self.model, device=self.device)
         self.inpaint_request = InpaintRequest()
 
-    def clean(self, input_image: np.array, watermark_mask: np.array) -> np.array:
+    def clean(self, input_image: np.array, watermark_mask: np.array, inpaint_request: InpaintRequest|None = None) -> np.array:
+        if inpaint_request is None:
+            inpaint_request = self.inpaint_request
         inpaint_result = self.model_manager(
-            input_image, watermark_mask, self.inpaint_request
+            input_image, watermark_mask, inpaint_request
         )
         inpaint_result = cv2.cvtColor(inpaint_result, cv2.COLOR_BGR2RGB)
         return inpaint_result
