@@ -1,9 +1,54 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
 import ffmpeg
+
+
+def merge_frames_with_overlap(
+    result_frames: Optional[List[Optional[np.ndarray]]],
+    chunk_frames: List[np.ndarray],
+    start_idx: int,
+    overlap_size: int,
+    is_first_chunk: bool = False,
+) -> List[Optional[np.ndarray]]:
+    chunk_size = len(chunk_frames)
+    
+    # Initialize result_frames if this is the first chunk
+    if result_frames is None or is_first_chunk:
+        if result_frames is None:
+            result_frames = [None] * (start_idx + chunk_size)
+        for i in range(chunk_size):
+            result_frames[start_idx + i] = chunk_frames[i]
+        return result_frames
+    
+    # Ensure result_frames is large enough
+    required_size = start_idx + chunk_size
+    if len(result_frames) < required_size:
+        result_frames.extend([None] * (required_size - len(result_frames)))
+    
+    # Blend overlap region
+    overlap_start = 0
+    overlap_end = min(overlap_size, chunk_size)
+    
+    for i in range(overlap_start, overlap_end):
+        result_idx = start_idx + i
+        if result_frames[result_idx] is not None and chunk_frames[i] is not None:
+            # Alpha blending: gradually transition from old to new
+            alpha = i / overlap_end if overlap_end > 0 else 1.0
+            result_frames[result_idx] = (
+                result_frames[result_idx].astype(np.float32) * (1 - alpha)
+                + chunk_frames[i].astype(np.float32) * alpha
+            ).astype(np.uint8)
+        elif chunk_frames[i] is not None:
+            result_frames[result_idx] = chunk_frames[i]
+    
+    # Copy non-overlap region
+    for i in range(overlap_end, chunk_size):
+        result_frames[start_idx + i] = chunk_frames[i]
+    
+    return result_frames
 
 
 class VideoLoader:

@@ -10,7 +10,7 @@ from sorawm.schemas import CleanerType
 from sorawm.utils.imputation_utils import (find_2d_data_bkps,
                                            find_idxs_interval,
                                            get_interval_average_bbox)
-from sorawm.utils.video_utils import VideoLoader
+from sorawm.utils.video_utils import VideoLoader, merge_frames_with_overlap
 from sorawm.watermark_cleaner import WaterMarkCleaner
 from sorawm.watermark_detector import SoraWaterMarkDetector
 
@@ -219,10 +219,16 @@ class SoraWM:
                     progress = 50 + int((idx / total_frames) * 45)
                     progress_callback(progress)
         elif self.cleaner_type == CleanerType.E2FGVI_HQ:
-            ## 2. E2FGVI_HQ Cleaner Strategy.
+            ## 2. E2FGVI_HQ Cleaner Strategy with overlap blending.
             input_video_loader = VideoLoader(input_video_path)
             frame_counter = 0
-            for start, end in zip(bkps_full[:-1], bkps_full[1:]):
+            
+            overlap_ratio = self.cleaner.config.overlap_ratio
+            all_cleaned_frames = None
+            
+            for segment_idx, (start, end) in enumerate[tuple[int, int]](zip(bkps_full[:-1], bkps_full[1:])):
+                segment_overlap = int(overlap_ratio * (end-start+1))
+                logger.debug(f"segment_overlap: {segment_overlap}")
                 frames = np.array(input_video_loader.get_slice(start, end))
                 # Convert BGR to RGB for E2FGVI_HQ cleaner (expects RGB format)
                 frames = frames[:, :, :, ::-1].copy()
@@ -238,18 +244,39 @@ class SoraWM:
                         idx_offset = idx - start
                         masks[idx_offset][y1:y2, x1:x2] = 255
                 cleaned_frames = self.cleaner.clean(frames, masks)
-                # TODO: we may have a, how to say...  a blending in overlap region here....
-
-                # write the clean frames ....
-                for cleaned_frame in cleaned_frames:
-                    # Convert RGB back to BGR for FFmpeg output (expects bgr24 format)
-                    cleaned_frame_bgr = cleaned_frame[:, :, ::-1]
-                    process_out.stdin.write(cleaned_frame_bgr.astype(np.uint8).tobytes())
-                    frame_counter += 1
-                    # 50% - 95%
-                    if progress_callback and frame_counter % 10 == 0:
-                        progress = 50 + int((frame_counter / total_frames) * 45)
-                        progress_callback(progress)
+                
+                # Merge with overlap blending support
+                all_cleaned_frames = merge_frames_with_overlap(
+                    result_frames=all_cleaned_frames,
+                    chunk_frames=cleaned_frames,
+                    start_idx=start,
+                    overlap_size=segment_overlap,
+                    is_first_chunk=(segment_idx == 0),
+                )
+                
+                # Write frames that are no longer in overlap regions
+                write_start = start
+                if segment_idx > 0:
+                    write_start = start + segment_overlap
+                    
+                # Determine which frames to write (avoid overlap with next segment)
+                next_segment_start = end
+                if segment_idx < len(bkps_full) - 2:  # Not the last segment
+                    next_segment_start = end - segment_overlap
+                else:
+                    next_segment_start = end
+                
+                for write_idx in range(write_start, next_segment_start):
+                    if write_idx < len(all_cleaned_frames) and all_cleaned_frames[write_idx] is not None:
+                        cleaned_frame = all_cleaned_frames[write_idx]
+                        # Convert RGB back to BGR for FFmpeg output (expects bgr24 format)
+                        cleaned_frame_bgr = cleaned_frame[:, :, ::-1]
+                        process_out.stdin.write(cleaned_frame_bgr.astype(np.uint8).tobytes())
+                        frame_counter += 1
+                        # 50% - 95%
+                        if progress_callback and frame_counter % 10 == 0:
+                            progress = 50 + int((frame_counter / total_frames) * 45)
+                            progress_callback(progress)
 
         process_out.stdin.close()
         process_out.wait()

@@ -12,6 +12,7 @@ from sorawm.configs import (E2FGVI_HQ_CHECKPOINT_PATH,
 from sorawm.models.model.e2fgvi_hq import InpaintGenerator
 from sorawm.utils.devices_utils import get_device
 from sorawm.utils.download_utils import ensure_model_downloaded
+from sorawm.utils.video_utils import merge_frames_with_overlap
 
 
 def get_ref_index(
@@ -155,7 +156,7 @@ class E2FGVIHDCleaner:
     def clean(self, frames: np.ndarray, masks: np.ndarray) -> List[np.ndarray]:
         video_length = len(frames)
         chunk_size = int(self.config.chunk_size_ratio * video_length)
-        overlap_size = int(self.config.overlap_ratio * chunk_size)
+        overlap_size = int(self.config.overlap_ratio * video_length)
         num_chunks = int(np.ceil(video_length / (chunk_size - overlap_size)))
         h, w = frames[0].shape[:2]
         # Convert to tensors
@@ -191,27 +192,13 @@ class E2FGVIHDCleaner:
                 w,
             )
             # Merge results with blending in overlap region
-            if chunk_idx == 0:
-                for i in range(actual_chunk_size):
-                    comp_frames[start_idx + i] = comp_frames_chunk[i]
-            else:
-                overlap_start = 0
-                overlap_end = min(overlap_size, actual_chunk_size)
-                for i in range(overlap_start, overlap_end):
-                    if (
-                        comp_frames[start_idx + i] is not None
-                        and comp_frames_chunk[i] is not None
-                    ):
-                        alpha = i / overlap_end
-                        comp_frames[start_idx + i] = (
-                            comp_frames[start_idx + i].astype(np.float32) * (1 - alpha)
-                            + comp_frames_chunk[i].astype(np.float32) * alpha
-                        )
-                    elif comp_frames_chunk[i] is not None:
-                        comp_frames[start_idx + i] = comp_frames_chunk[i]
-
-                for i in range(overlap_end, actual_chunk_size):
-                    comp_frames[start_idx + i] = comp_frames_chunk[i]
+            comp_frames = merge_frames_with_overlap(
+                result_frames=comp_frames,
+                chunk_frames=comp_frames_chunk,
+                start_idx=start_idx,
+                overlap_size=overlap_size,
+                is_first_chunk=(chunk_idx == 0),
+            )
             # Clear GPU memory
             del imgs_chunk, masks_chunk, comp_frames_chunk
             try:
