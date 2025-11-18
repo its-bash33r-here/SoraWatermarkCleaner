@@ -6,23 +6,31 @@ This project provides an elegant way to remove the sora watermark in the sora2 g
 
 <table>
   <tr>
-    <td width="50%">
-      <h3 align="center">Watermark removed</h3>
+    <td width="33%">
+      <h3 align="center">Fast Remove</h3>
       <video src="https://github.com/user-attachments/assets/8cdc075e-7d15-4d04-8fa2-53dd287e5f4c" width="100%"></video>
     </td>
-    <td width="50%">
+    <td width="33%">
+      <h3 align="center" > Better Remove</h3>
+      <video src="https://github.com/user-attachments/assets/4f032fc7-97da-471b-9a54-9de2a434fa57" width="100%"></video>
+    </td>
+       <td width="33%">
       <h3 align="center">Original</h3>
       <video src="https://github.com/user-attachments/assets/4f032fc7-97da-471b-9a54-9de2a434fa57" width="100%"></video>
     </td>
   </tr>
 </table>
+
 ⭐️: 
 
-1. **We support batch processing now.**
-2. **For the new watermark with username,  the Yolo weights has been updated, try the new version watermark detect model, it should work better.**
+- **We have provided another model which could preserve time consistency without flicker!**
 
-3. **We have uploaded the labelled datasets into huggingface, check this [dataset](https://huggingface.co/datasets/LLinked/sora-watermark-dataset) out. Free free to train your custom detector model or improve our model!**
-4. **One-click portable build is available** — [Download here](#3-one-click-portable-version) for Windows users! No installation required.
+- **We support batch processing now.**
+- **For the new watermark with username,  the Yolo weights has been updated, try the new version watermark detect model, it should work better.**
+
+- **We have uploaded the labelled datasets into huggingface, check this [dataset](https://huggingface.co/datasets/LLinked/sora-watermark-dataset) out. Free free to train your custom detector model or improve our model!**
+
+- **One-click portable build is available** — [Download here](#3-one-click-portable-version) for Windows users! No installation required.
 
 ---
 
@@ -107,29 +115,37 @@ Simply download, extract, and run!
 
 To have a basic usage, just try the `example.py`:
 
+> We provide two models to remove watermark. LAMA is fast but may have flicker on the cleaned area, which E2FGVI_HQ compromise this only requires cuda otherwise very slow on CPU or MPS.
+
 ```python
-
 from pathlib import Path
-from sorawm.core import SoraWM
 
+from sorawm.core import SoraWM
+from sorawm.schemas import CleanerType
 
 if __name__ == "__main__":
-    input_video_path = Path(
-        "resources/dog_vs_sam.mp4"
-    )
-    output_video_path = Path("outputs/sora_watermark_removed.mp4")
-    sora_wm = SoraWM()
-    sora_wm.run(input_video_path, output_video_path)
+    input_video_path = Path("resources/dog_vs_sam.mp4")
+    output_video_path = Path("outputs/sora_watermark_removed")
+    
+    # 1. LAMA is fast and good quality, but not time consistent.
+    sora_wm = SoraWM(cleaner_type=CleanerType.LAMA)
+    sora_wm.run(input_video_path, f"{output_video_path}_lama.mp4")
+    
+    # 2. E2FGVI_HQ ensures time consistency, but will be very slow on no-cuda device.
+    sora_wm = SoraWM(cleaner_type=CleanerType.E2FGVI_HQ)
+    sora_wm.run(input_video_path, f"{output_video_path}_e2fgvi_hq.mp4")
 
 ```
 
 We also provide you with a `streamlit` based interactive web page, try it with:
 
+> We also provide the switch here.
+
 ```bash
 streamlit run app.py
 ```
 
-<img src="resources/app.png" style="zoom: 25%;" />
+<img src="assests/model_switch.png" style="zoom: 25%;" />
 
 Batch processing is also supported, now you can drag a folder or select multiple files to process.
 <img src="assests/streamlit_batch.png" style="zoom: 50%;" />
