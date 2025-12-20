@@ -7,15 +7,14 @@ from typing import Dict, List
 
 def validate_args_and_show_help():
     """
-    Parse CLI arguments, validate the input folder, and return resolved paths and parsed args.
-
-    Parses command-line options for input, output, pattern, quiet, and model; converts input and output to resolved Path objects and validates that the input path exists and is a directory. Exits the process with code 1 if the input path is missing or not a directory.
-
+    Parse CLI arguments, validate the input directory, and return resolved paths with the parsed arguments.
+    
+    Parses command-line options for input, output, pattern, quiet, and model, converts the input and output paths to resolved Path objects, and verifies that the input path exists and is a directory. Exits the process with code 1 if the input path does not exist or is not a directory.
+    
     Returns:
-        (input_folder, output_folder, args):
-            input_folder (Path): Resolved Path to the input directory.
-            output_folder (Path): Resolved Path to the output directory.
-            args (argparse.Namespace): Parsed command-line arguments.
+        input_folder (Path): Resolved Path to the input directory.
+        output_folder (Path): Resolved Path to the output directory.
+        args (argparse.Namespace): Parsed command-line arguments (includes `pattern`, `quiet`, and `model`).
     """
     parser = argparse.ArgumentParser(
         description="🎬 Batch process videos to remove Sora watermarks",
@@ -97,9 +96,9 @@ Examples:
 def main():
     # Validate arguments BEFORE loading heavy dependencies (ffmpeg, torch, etc.)
     """
-    Orchestrate CLI argument validation, lazy-load heavy dependencies, and run the batch video processing workflow.
-
-    Validates and processes command-line arguments, imports runtime-only dependencies, selects the watermark removal model, constructs and runs the batch processor, and handles termination: exits with code 130 on user interrupt and with code 1 on other fatal errors.
+    Coordinate CLI validation, lazy-load runtime dependencies, and run the batch video watermark-removal workflow.
+    
+    Parses and validates command-line arguments, imports heavy runtime libraries only after validation, selects the configured cleaner model, constructs and runs the batch processor that processes matching videos with a Rich progress UI, and prints a final summary. Exits with code 130 on user interrupt (KeyboardInterrupt) and with code 1 on other fatal errors.
     """
     input_folder, output_folder, args = validate_args_and_show_help()
 

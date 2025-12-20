@@ -44,6 +44,15 @@ def find_idxs_interval(idxs: List[int], bkps: List[int]) -> List[int]:
     """
 
     def _find_idx_interval(_idx: int) -> int:
+        """
+        Locate which interval (between consecutive breakpoints) contains a given index.
+        
+        Parameters:
+            _idx (int): The target index to locate relative to the outer-scope `bkps` list.
+        
+        Returns:
+            int: The interval index `i` such that `bkps[i] <= _idx < bkps[i+1]`. If `_idx` lies before the first interval or after the last, returns the nearest valid interval index.
+        """
         left = 0
         right = len(bkps) - 2
 

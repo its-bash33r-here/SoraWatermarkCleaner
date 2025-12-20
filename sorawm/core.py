@@ -27,6 +27,18 @@ class SoraWM:
         cleaner_type: CleanerType = CleanerType.LAMA,
         enable_torch_compile=ENABLE_E2FGVI_HQ_TORCH_COMPILE,
     ):
+        """
+        Initialize the SoraWM instance with a watermark detector and a watermark cleaner.
+        
+        Parameters:
+            cleaner_type (CleanerType): Chooses the cleaning strategy to use (e.g., LAMA or E2FGVI_HQ).
+            enable_torch_compile (bool): If true, allow the cleaner to use Torch compilation/optimization when supported (applies to E2FGVI_HQ).
+        
+        Sets:
+            self.detector: SoraWaterMarkDetector instance used for watermark detection.
+            self.cleaner: WaterMarkCleaner instance configured with the provided cleaner_type and enable_torch_compile flag.
+            self.cleaner_type: Stored cleaner_type for later branching logic.
+        """
         self.detector = SoraWaterMarkDetector()
         self.cleaner = WaterMarkCleaner(cleaner_type, enable_torch_compile)
         self.cleaner_type = cleaner_type
@@ -38,6 +50,17 @@ class SoraWM:
         progress_callback: Callable[[int], None] | None = None,
         quiet: bool = False,
     ):
+        """
+        Process all supported video files in a directory, running watermark detection and removal for each file and saving outputs to a specified directory.
+        
+        This function discovers video files under `input_video_dir_path` using supported extensions, creates `output_video_dir_path` when needed (defaults to a sibling "watermark_removed" directory), and processes each video sequentially by calling `self.run`. If `progress_callback` is provided it will be called with an overall progress percentage (0–100) that aggregates per-video progress across the batch.
+        
+        Parameters:
+            input_video_dir_path (Path): Directory containing input videos.
+            output_video_dir_path (Path | None): Directory to write cleaned videos. If None, a sibling directory named "watermark_removed" is used.
+            progress_callback (Callable[[int], None] | None): Optional callback receiving an integer overall progress percentage (0–100).
+            quiet (bool): If True, suppresses informational logging and progress bar.
+        """
         if output_video_dir_path is None:
             output_video_dir_path = input_video_dir_path.parent / "watermark_removed"
             if not quiet:

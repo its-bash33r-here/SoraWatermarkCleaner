@@ -94,17 +94,9 @@ class WMRemoveTaskWorker:
 
     async def run(self):
         """
-        Continuously processes queued video cleaning tasks from the in-memory queue.
-
-        For each dequeued task this worker:
-        - Sets the worker's current task id and marks the Task row as PROCESSING with 10% progress.
-        - Ensures the active SoraWM instance matches the task's cleaner type and switches it if necessary.
-        - Runs the cleaning operation (providing a progress callback that updates task percentage in the database).
-        - On success, marks the Task as FINISHED, sets percentage to 100, records the output_path and download_url.
-        - On failure, marks the Task as ERROR and sets percentage to 0.
-        - Always clears the current task id and calls queue.task_done() for the processed item.
-
-        Side effects: updates Task rows in the database, writes output files to the worker's output directory, and logs lifecycle events.
+        Continuously process video cleaning tasks from the in-memory queue.
+        
+        For each dequeued task this worker marks the Task as PROCESSING, ensures the active cleaner matches the task's cleaner type, runs the cleaning operation with progress updates, and on completion updates the Task to FINISHED with output path and download URL; on failure the Task is marked ERROR. Side effects include updating Task rows in the database, writing output files to the worker's output directory, and emitting lifecycle logs.
         """
         logger.info("Worker started, waiting for tasks...")
         while True:
@@ -214,9 +206,9 @@ class WMRemoveTaskWorker:
     async def get_queue_status(self) -> QueueStatusResponse:
         """
         Provide a live snapshot of the task queue and current worker state.
-
+        
         Returns:
-            QueueStatusResponse: A response containing a QueueSummary (is_busy, queue_length, total_active), the currently running task id (or None), and a list of QueueTaskInfo entries describing waiting tasks.
+            QueueStatusResponse: Contains a QueueSummary (is_busy, queue_length, total_active), the id of the currently running task or `None`, and a list of QueueTaskInfo entries describing waiting tasks.
         """
         # 1. 获取内存中的实时状态快照
         current_running = self.current_task_id

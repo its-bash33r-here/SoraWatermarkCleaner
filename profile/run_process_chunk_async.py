@@ -16,6 +16,15 @@ from sorawm.models.model.e2fgvi_hq import InpaintGenerator
 
 @contextmanager
 def nvtx(msg: str):
+    """
+    Context manager that pushes an NVTX profiling range with the given message on entry and pops the range on exit.
+    
+    Parameters:
+        msg (str): Message label for the NVTX range, shown by NVTX-enabled profilers.
+    
+    Returns:
+        context manager: A context manager that establishes an NVTX range annotated with `msg`.
+    """
     range_push(msg)
     try:
         yield
@@ -142,6 +151,13 @@ class ProfileE2FGVIHDCleaner(E2FGVIHDCleaner):
         ckpt_path: Path = E2FGVI_HQ_CHECKPOINT_PATH,
         config: E2FGVIHDConfig = E2FGVIHDConfig(),
     ):
+        """
+        Initialize the cleaner by ensuring the model checkpoint is available, instantiating the profiling inpainting model, loading its weights, setting it to evaluation mode, and storing configuration.
+        
+        Parameters:
+            ckpt_path (Path): Filesystem path to the model checkpoint to load.
+            config (E2FGVIHDConfig): Configuration for the cleaner and model behavior.
+        """
         with nvtx("cleaner_init_total"):
             with nvtx("ensure_model_downloaded"):
                 ensure_model_downloaded(ckpt_path, E2FGVI_HQ_CHECKPOINT_REMOTE_URL)
@@ -160,16 +176,14 @@ class ProfileE2FGVIHDCleaner(E2FGVIHDCleaner):
 
     def clean(self, frames: np.ndarray, masks: np.ndarray) -> List[np.ndarray]:
         """
-        Run the full cleaning pipeline on a video using chunked, overlapping processing and return reconstructed frames.
-
-        Processes the input frames and masks in configurable chunks with overlap: converts inputs to tensors, runs per-chunk inpainting and fusion, merges chunk outputs handling overlaps, and returns the final list of cleaned frames in original order.
-
+        Clean a video by inpainting masked regions using chunked, overlapping processing.
+        
         Parameters:
-            frames (np.ndarray): Sequence of input RGB frames as a numpy array of shape (T, H, W, C) with values in [0, 255] or [0,1].
-            masks (np.ndarray): Corresponding mask array of shape (T, H, W) where nonzero values indicate regions to inpaint.
-
+            frames (np.ndarray): Input RGB frames of shape (T, H, W, C) with values in [0, 255] or [0, 1].
+            masks (np.ndarray): Binary or intensity masks of shape (T, H, W) where nonzero values indicate regions to inpaint.
+        
         Returns:
-            List[np.ndarray]: List of T reconstructed RGB frames as numpy arrays (H, W, C), in the same order as the input.
+            List[np.ndarray]: List of T reconstructed RGB frames as numpy arrays of shape (H, W, C) in the same order as the input.
         """
         with nvtx("ProfileE2FGVIHDCleaner.clean_total"):
             with nvtx("setup_basic_params"):
@@ -355,6 +369,22 @@ class ProfileE2FGVIHDCleaner(E2FGVIHDCleaner):
         h: int,
         w: int,
     ) -> List[np.ndarray]:
+        """
+        Process a chunk of frames by running the inpainting model on sliding windows, asynchronously transferring predictions to CPU, and compositing results into final chunk frames.
+        
+        Parameters:
+            chunk_length (int): Number of frames in the chunk.
+            neighbor_stride (int): Stride controlling the sliding window radius for neighboring frames.
+            imgs_chunk (torch.Tensor): Tensor of shape (1, T, C, H, W) containing normalized input frames for the chunk.
+            masks_chunk (torch.Tensor): Tensor of shape (1, T, 1, H, W) containing masks for the chunk where masked regions are nonzero.
+            binary_masks_chunk (np.ndarray): Per-frame binary masks (H, W) or (T, H, W) used for compositing predicted pixels into originals.
+            frames_np_chunk (np.ndarray): Original chunk frames as NumPy arrays with shape (T, H, W, C) used as background for compositing.
+            h (int): Original frame height (pixels).
+            w (int): Original frame width (pixels).
+        
+        Returns:
+            comp_frames_chunk (List[np.ndarray]): List of length `chunk_length` with composited frames for the chunk (each a NumPy array in image pixel range), where overlapping predictions have been blended.
+        """
         comp_frames_chunk = [None] * chunk_length
 
         # 创建用于数据传输的 stream
@@ -478,7 +508,18 @@ class ProfileE2FGVIHDCleaner(E2FGVIHDCleaner):
         frames_np_chunk: np.ndarray,
         comp_frames_chunk: List[np.ndarray],
     ):
-        """将预测结果合成到原始帧上"""
+        """
+        Composite predicted images into the original chunk frames, updating comp_frames_chunk in place.
+        
+        Each predicted image is masked with the corresponding binary mask and blended with the original frame; if multiple predictions target the same frame index they are averaged (50/50).
+        
+        Parameters:
+            pred_imgs_np (np.ndarray): Array of predicted images with shape (N, H, W, C) or (N, C, H, W); values are treated as image pixels and cast to uint8.
+            neighbor_ids (List[int]): Indices into the chunk identifying which frame each prediction corresponds to.
+            binary_masks_chunk (np.ndarray): Per-frame binary masks with shape (T, H, W) or (T, H, W, 1); mask values are 1 for predicted regions and 0 for original regions.
+            frames_np_chunk (np.ndarray): Original chunk frames with shape (T, H, W, C), used as the background where mask is 0.
+            comp_frames_chunk (List[np.ndarray]): Mutable list of length T where composited frames are stored; entries are created or updated in place.
+        """
         for i in range(len(neighbor_ids)):
             idx = neighbor_ids[i]
             img = np.array(pred_imgs_np[i]).astype(np.uint8) * binary_masks_chunk[

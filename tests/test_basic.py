@@ -10,7 +10,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 def test_schemas_import():
-    """Test that schemas can be imported."""
+    """
+    Verify that CleanerType constants import correctly and have expected values.
+    
+    Checks that CleanerType.LAMA equals "lama" and CleanerType.E2FGVI_HQ equals "e2fgvi_hq".
+    
+    Returns:
+        bool: True if both checks pass, False otherwise.
+    """
     try:
         from sorawm.schemas import CleanerType
 
@@ -24,7 +31,14 @@ def test_schemas_import():
 
 
 def test_watermark_cleaner_factory():
-    """Test watermark cleaner factory with mocking."""
+    """
+    Verify WaterMarkCleaner returns the correct cleaner instances for supported CleanerType values using mocks.
+    
+    Tests that requesting CleanerType.LAMA yields the LamaCleaner instance and requesting CleanerType.E2FGVI_HQ yields the E2FGVIHDCleaner instance by patching those cleaner classes.
+    
+    Returns:
+        result (bool): `True` if both cleaner selections produced the expected mocked instances, `False` otherwise.
+    """
     try:
         from unittest.mock import patch, MagicMock
 
@@ -56,7 +70,14 @@ def test_watermark_cleaner_factory():
 
 
 def test_imputation_utils():
-    """Test imputation utilities with mock data."""
+    """
+    Run basic tests for imputation utilities (breakpoint detection and interval bbox averaging) using mocks.
+    
+    Mocks ruptures' API to simulate a change-point detection result and verifies that find_2d_data_bkps returns the expected breakpoints list (excluding the final point). Also verifies that get_interval_average_bbox computes an averaged bounding box for intervals containing valid boxes. Intended for lightweight verification without external dependencies.
+    
+    Returns:
+        bool: `True` if all assertions pass, `False` if an exception occurs during the tests.
+    """
     try:
         # Test with minimal data that doesn't require ruptures
         import numpy as np
@@ -95,7 +116,14 @@ def test_imputation_utils():
 
 
 def test_video_utils():
-    """Test video utilities."""
+    """
+    Run a basic smoke test for the video utilities' frame merging behavior.
+    
+    Validates that merge_frames_with_overlap correctly returns the two provided RGB frames when merging a chunk with zero overlap.
+    
+    Returns:
+        True if the test passed, False otherwise.
+    """
     try:
         from sorawm.utils.video_utils import merge_frames_with_overlap
         import numpy as np

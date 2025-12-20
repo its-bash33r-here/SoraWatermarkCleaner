@@ -66,14 +66,14 @@ class SPyNet(nn.Module):
         pretrained="https://download.openmmlab.com/mmediting/restorers/basicvsr/spynet_20210409-c6c1bd09.pth",
     ):
         """
-        Initialize the SPyNet module, creating the six-level SPyNet basic modules and registering input normalization buffers.
-
+        Initialize the SPyNet model with six SPyNetBasicModule levels and input normalization buffers.
+        
         Parameters:
-            use_pretrain (bool): If True, attempt to download (if necessary) and load pretrained weights into this model.
-            pretrained (str): URL or local path to the pretrained checkpoint to use when `use_pretrain` is True.
-
+            use_pretrain (bool): If True, attempt to load pretrained weights into the model.
+            pretrained (str): URL or local path to pretrained checkpoint used when `use_pretrain` is True.
+        
         Notes:
-            - Constructs `self.basic_module` as a ModuleList of six SPyNetBasicModule instances.
+            - Creates `self.basic_module` as an nn.ModuleList of six SPyNetBasicModule instances.
             - Registers `mean` and `std` buffers for input normalization.
         """
         super().__init__()
@@ -430,7 +430,17 @@ def flow_warp(
 
 def initial_mask_flow(mask):
     """
-    mask 1 indicates valid pixel 0 indicates unknown pixel
+    Compute per-pixel directional offsets from unknown pixels to their nearest valid pixels in four cardinal directions.
+    
+    Given a binary mask where 1 indicates a valid pixel and 0 indicates an unknown pixel, this function computes tensors of vertical and horizontal offsets that point from each pixel toward the nearest valid pixel above, below, left, and right. The output concatenates these directional offsets (and zero placeholders) into a single tensor suitable for subsequent mask-flow processing.
+    
+    Parameters:
+        mask (torch.Tensor): Binary tensor of shape (B, T, C, H, W) where 1 denotes a valid pixel and 0 denotes unknown.
+    
+    Returns:
+        torch.Tensor: Offset tensor with the same batch/time/channel grouping and spatial dimensions, concatenated along channel-like axis into 8 maps arranged as:
+            [zero, left_offset, zero, right_offset, up_offset, zero, down_offset, zero]
+        Each offset map contains signed pixel displacements toward the nearest valid pixel in that direction; zeros are placeholders where no displacement is used.
     """
     B, T, C, H, W = mask.shape
 

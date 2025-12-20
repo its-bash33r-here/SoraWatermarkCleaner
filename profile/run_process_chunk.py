@@ -142,6 +142,16 @@ class ProfileE2FGVIHDCleaner(E2FGVIHDCleaner):
         ckpt_path: Path = E2FGVI_HQ_CHECKPOINT_PATH,
         config: E2FGVIHDConfig = E2FGVIHDConfig(),
     ):
+        """
+        Initialize the cleaner by preparing and loading the inpainting model and storing runtime configuration.
+        
+        Parameters:
+            ckpt_path (Path): Local path to the model checkpoint to load; will be downloaded if missing.
+            config (E2FGVIHDConfig): Configuration object controlling model and pipeline behavior.
+        
+        Notes:
+            - Ensures the checkpoint exists (downloads if necessary), instantiates the ProfileInpaintGenerator on the target device, loads the checkpoint weights, sets the model to evaluation mode, compiles the model, and saves the provided config.
+        """
         with nvtx("cleaner_init_total"):
             with nvtx("ensure_model_downloaded"):
                 ensure_model_downloaded(ckpt_path, E2FGVI_HQ_CHECKPOINT_REMOTE_URL)

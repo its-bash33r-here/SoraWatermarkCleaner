@@ -41,14 +41,15 @@ async def submit_remove_task(
     cleaner_type: CleanerType = Query(default=CleanerType.LAMA),
 ):
     """
-    Create a watermark-removal task for the provided video and schedule the file upload and queuing to run in the background.
-
+    Create a watermark-removal task for an uploaded video and schedule the file write and queueing to run in the background.
+    
     Parameters:
-        video (UploadFile): Incoming uploaded video file.
-        cleaner_type (CleanerType): Cleaner algorithm to use for the task; defaults to `CleanerType.LAMA`.
-
+        background_tasks (BackgroundTasks): FastAPI background task manager used to schedule the upload and queueing.
+        video (UploadFile): Uploaded video file to process.
+        cleaner_type (CleanerType): Cleaner algorithm to apply; defaults to CleanerType.LAMA.
+    
     Returns:
-        dict: A mapping containing `task_id` (the created task identifier) and `message` confirming submission.
+        dict: Mapping with `task_id` (the created task identifier) and `message` confirming submission.
     """
     task_id = await worker.create_task(cleaner_type)
     content = await video.read()
@@ -70,6 +71,20 @@ async def get_results(remove_task_id: str) -> WMRemoveResults:
 
 @router.get("/download/{task_id}")
 async def download_video(task_id: str):
+    """
+    Serve the finished output video file for a completed removal task.
+    
+    Parameters:
+        task_id (str): Identifier of the removal task.
+    
+    Returns:
+        FileResponse: A response that streams the task's output MP4 file.
+    
+    Raises:
+        HTTPException: 404 if the task does not exist.
+        HTTPException: 400 if the task exists but is not finished.
+        HTTPException: 404 if the task's output file is missing.
+    """
     result = await worker.get_task_status(task_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Task does not exist.")

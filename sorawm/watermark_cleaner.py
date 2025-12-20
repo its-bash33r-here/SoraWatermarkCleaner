@@ -12,14 +12,15 @@ from sorawm.schemas import CleanerType
 class WaterMarkCleaner:
     def __new__(cls, cleaner_type: CleanerType, enable_torch_compile: bool):
         """
-        Create and return an instance of the specified cleaner implementation.
-
+        Selects and instantiates a watermark cleaner implementation based on `cleaner_type`.
+        
         Parameters:
             cleaner_type (CleanerType): The cleaner implementation to create.
-
+            enable_torch_compile (bool): When creating an E2FGVI_HQ cleaner, enable or disable `torch.compile` in its configuration.
+        
         Returns:
-            An instance of the corresponding cleaner class (for example, `LamaCleaner` or `E2FGVIHDCleaner`).
-
+            Cleaner: An instance of the corresponding cleaner class (e.g., `LamaCleaner` or `E2FGVIHDCleaner`).
+        
         Raises:
             ValueError: If `cleaner_type` is not a recognized CleanerType.
         """

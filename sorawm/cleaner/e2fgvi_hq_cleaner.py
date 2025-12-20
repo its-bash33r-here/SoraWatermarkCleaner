@@ -26,17 +26,19 @@ def get_ref_index(
 ) -> List[int]:
     # TODO: optimize the code later.
     """
-    Compute reference frame indices to use for a given frame.
-
+    Compute reference frame indices to use for a target frame.
+    
+    Selects candidate reference indices spaced by `ref_length`, excluding any indices present in `neighbor_ids`. If `num_ref` is -1, selects candidates across the entire sequence [0, length) at intervals of `ref_length`. Otherwise, selects candidates from a window centered on `frame_idx` (bounded by sequence ends) at intervals of `ref_length`.
+    
     Parameters:
-        frame_idx (int): Index of the target frame around which references are selected.
-        neighbor_ids (List[int]): Indices of neighbor frames that must be excluded from reference selection.
+        frame_idx (int): Index of the target frame around which references are chosen.
+        neighbor_ids (List[int]): Indices to exclude from selection.
         length (int): Total number of frames in the sequence.
-        ref_length (int): Step size (interval) between candidate reference frames.
-        num_ref (int): Number of reference frames to select; if -1, select candidates across the entire sequence at intervals of `ref_length`.
-
+        ref_length (int): Interval step between candidate reference frames.
+        num_ref (int): Number controlling selection scope; `-1` selects from the whole sequence, any other value limits selection to a window around `frame_idx`.
+    
     Returns:
-        ref_index (List[int]): List of selected reference frame indices, spaced by `ref_length`, excluding any indices in `neighbor_ids`. When `num_ref` != -1, at most `num_ref` indices are returned and they are chosen from a window centered on `frame_idx`.
+        List[int]: Selected reference frame indices, spaced by `ref_length` and excluding `neighbor_ids`. When `num_ref` != -1, selection is limited to the centered window and will contain at most `num_ref + 1` indices.
     """
     ref_index = []
     if num_ref == -1:
@@ -117,6 +119,11 @@ class E2FGVIHDCleaner:
         self.auto_compile()
 
     def auto_compile(self):
+        """
+        Attempt to compile the inpainting model with torch.compile and load/save compile cache artifacts.
+        
+        If configuration enables torch compilation, this method will try to load cached compile artifacts from the configured artifacts path and replace self.model with a compiled wrapper; if no cache exists it will compile the model and persist the resulting artifacts to disk. On any failure the method logs the error and leaves self.model unchanged.
+        """
         if self.config.enable_torch_compile:
             try:
                 if E2FGVI_HQ_TORCH_COMPILE_ARTIFACTS.exists():
@@ -186,20 +193,22 @@ class E2FGVIHDCleaner:
         w: int,
     ) -> List[np.ndarray]:
         """
-        Compose and return cleaned frames for a chunk by inpainting masked regions using neighboring and reference frames.
-
+        Compose cleaned frames for a chunk by inpainting masked regions using neighboring and reference frames.
+        
+        This function runs the model on selected neighbor and reference frames for anchors across the chunk, blends predicted regions with original frames using provided binary masks, and returns a list of composited uint8 frames for the chunk. Entries corresponding to frames not processed remain `None`.
+        
         Parameters:
             chunk_length (int): Number of frames in the chunk.
             neighbor_stride (int): Step between neighbor anchor frames processed within the chunk.
-            imgs_chunk (torch.Tensor): Tensor of input frames with shape (1, T_chunk, 3, H, W), normalized for the model (typically in [-1, 1]).
-            masks_chunk (torch.Tensor): Corresponding masks with shape (1, T_chunk, 1, H, W), values in [0, 1] where 1 indicates masked pixels.
-            binary_masks_chunk (np.ndarray): Binary masks used to blend predictions with originals; shape (chunk_length, H, W, 3) or (chunk_length, H, W) broadcastable to frames, dtype uint8 or {0,1}.
-            frames_np_chunk (np.ndarray): Original frames as uint8 numpy arrays with shape (chunk_length, H, W, 3).
+            imgs_chunk (torch.Tensor): Input frames shaped (1, T_chunk, 3, H, W), normalized for the model.
+            masks_chunk (torch.Tensor): Masks shaped (1, T_chunk, 1, H, W) where 1 indicates masked pixels.
+            binary_masks_chunk (np.ndarray): Binary blending masks shape (chunk_length, H, W, 3) or broadcastable equivalent; values 0/1.
+            frames_np_chunk (np.ndarray): Original frames as uint8 arrays with shape (chunk_length, H, W, 3).
             h (int): Frame height.
             w (int): Frame width.
-
+        
         Returns:
-            List[np.ndarray]: List of length `chunk_length` containing the composited uint8 frames (H x W x 3) for processed indices; entries may be `None` for frames that were not covered/updated.
+            List[np.ndarray]: List of length `chunk_length` with composited uint8 frames (H x W x 3) for processed indices; elements may be `None` for frames that were not updated.
         """
         comp_frames_chunk = [None] * chunk_length
 

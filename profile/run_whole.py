@@ -60,15 +60,15 @@ class ProfileSoraWM(SoraWM):
         quiet: bool = False,
     ):
         """
-        Run the watermark detection and removal pipeline on an input video and write the processed video (with audio merged) to the given output path.
-
-        Detects watermark bounding boxes per frame, fills missing detections by interval averaging or neighboring frames, processes the video in breakpoint-based segments with overlap using the configured cleaner, encodes the cleaned frames to an intermediate video file, then merges the original audio into the final output.
-
+        Execute watermark detection and removal on the input video and write a cleaned video with the original audio to the specified output path.
+        
+        Performs per-frame watermark detection, fills missing detections, processes the video in breakpoint-defined segments using the configured cleaner, encodes an intermediate video, and merges the original audio into the final output.
+        
         Parameters:
             input_video_path (Path): Path to the source video to process.
             output_video_path (Path): Path where the final video with merged audio will be written.
-            progress_callback (Callable[[int], None] | None): Optional callback invoked periodically with an integer progress percentage (0–100). Progress values generally advance through detection and cleaning phases and report a final near-completion value before audio merge.
-            quiet (bool): If True, suppresses progress bar and most debug logging.
+            progress_callback (Callable[[int], None] | None): Optional callback invoked with an integer progress percentage (0–100) at key points during processing.
+            quiet (bool): If True, suppresses progress bars and most debug logging.
         """
         with nvtx("ProfileSoraWM.run"):
             with nvtx("init video loader"):
