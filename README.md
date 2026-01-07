@@ -138,7 +138,43 @@ For users who prefer a ready-to-use solution without manual installation, we pro
 
 Simply download, extract, and run!
 
-## 4.  Demo
+## 4. Performance Optimization
+
+We provide several options to speed up processing:
+
+| Detector | Batch | Cleaner | TorchCompile | Time (s) | Speedup |
+|:--------:|:-----:|:-------:|:------------:|:--------:|:-------:|
+| YOLO     | ×     | LAMA    | ×            | 44.33    | -       |
+| YOLO     | ×     | E2FGVI  | ×            | 142.42   | 1.00×   |
+| YOLO     | ×     | E2FGVI  | ✓            | 117.19   | 1.22×   |
+| YOLO     | 4     | E2FGVI  | ✓            | 82.63    | 1.72×   |
+
+> Speedup is calculated relative to the E2FGVI baseline. LAMA uses a different cleaning approach and is not directly comparable.
+
+- **YOLO Batch Detection**: Default batch size is 4 (`detect_batch_size=4`), enables batch inference for watermark detection, provides ~40% speedup
+- **TorchCompile** (E2FGVI only): Enabled by default (`enable_torch_compile=True`), provides ~22% speedup
+
+You can customize these settings when initializing `SoraWM`:
+
+```python
+from sorawm.core import SoraWM
+from sorawm.schemas import CleanerType
+
+# LAMA with batch detection (fast)
+sora_wm = SoraWM(
+    cleaner_type=CleanerType.LAMA,
+    detect_batch_size=4  # default: 4
+)
+
+# E2FGVI_HQ with all optimizations (time-consistent)
+sora_wm = SoraWM(
+    cleaner_type=CleanerType.E2FGVI_HQ,
+    enable_torch_compile=True,  # default: True
+    detect_batch_size=8         # custom batch size
+)
+```
+
+## 5.  Demo
 
 To have a basic usage, just try the `example.py`:
 
@@ -178,7 +214,7 @@ Batch processing is also supported, now you can drag a folder or select multiple
 <img src="assests/streamlit_batch.png" style="zoom: 50%;" />
 
 
-## 5. WebServer
+## 6. WebServer
 
 Here, we provide a **FastAPI-based web server** that can quickly turn this watermark remover into a service.
 
@@ -224,20 +260,20 @@ Once finished, the returned data will include a **download URL**.
 
 You can use the **download URL** from step 2 to retrieve the cleaned video.
 
-## 6. Datasets
+## 7. Datasets
 
 We have uploaded the labelled datasets into huggingface, check this out https://huggingface.co/datasets/LLinked/sora-watermark-dataset. Free free to train your custom detector model or improve our model!
 
-## 7. API
+## 8. API
 
 Packaged as a Cog and [published to Replicate](https://replicate.com/uglyrobot/sora2-watermark-remover) for simple API based usage.
 
-## 8. License
+## 9. License
 
  Apache License
 
 
-## 9. Citation
+## 10. Citation
 
 If you use this project, please cite:
 
@@ -250,7 +286,7 @@ If you use this project, please cite:
 }
 ```
 
-## 10. Acknowledgments
+## 11. Acknowledgments
 
 - [IOPaint](https://github.com/Sanster/IOPaint) for the LAMA implementation
 - [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) for object detection

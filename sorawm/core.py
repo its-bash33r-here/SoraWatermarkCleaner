@@ -16,7 +16,7 @@ from sorawm.utils.imputation_utils import (
 from sorawm.utils.video_utils import VideoLoader, merge_frames_with_overlap
 from sorawm.watermark_cleaner import WaterMarkCleaner
 from sorawm.watermark_detector import SoraWaterMarkDetector
-from sorawm.configs import ENABLE_E2FGVI_HQ_TORCH_COMPILE
+from sorawm.configs import ENABLE_E2FGVI_HQ_TORCH_COMPILE, DEFAULT_DETECT_BATCH_SIZE
 
 VIDEO_EXTENSIONS = [".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm"]
 
@@ -26,10 +26,12 @@ class SoraWM:
         self,
         cleaner_type: CleanerType = CleanerType.LAMA,
         enable_torch_compile=ENABLE_E2FGVI_HQ_TORCH_COMPILE,
+        detect_batch_size: int = DEFAULT_DETECT_BATCH_SIZE, # default set as four, but can be adjusted...
     ):
         self.detector = SoraWaterMarkDetector()
         self.cleaner = WaterMarkCleaner(cleaner_type, enable_torch_compile)
         self.cleaner_type = cleaner_type
+        self.detect_batch_size = detect_batch_size
 
     def run_batch(
         self,
@@ -146,6 +148,11 @@ class SoraWM:
             logger.debug(
                 f"total frames: {total_frames}, fps: {fps}, width: {width}, height: {height}"
             )
+        
+        # Batch detection: accumulate frames and process in batches
+        batch_frames = []
+        batch_indices = []
+        
         for idx, frame in enumerate(
             tqdm(
                 input_video_loader,
@@ -154,22 +161,60 @@ class SoraWM:
                 disable=quiet,
             )
         ):
-            detection_result = self.detector.detect(frame)
-            if detection_result["detected"]:
-                frame_bboxes[idx] = {"bbox": detection_result["bbox"]}
-                x1, y1, x2, y2 = detection_result["bbox"]
-                bbox_centers.append((int((x1 + x2) / 2), int((y1 + y2) / 2)))
-                bboxes.append((x1, y1, x2, y2))
-
-            else:
-                frame_bboxes[idx] = {"bbox": None}
-                detect_missed.append(idx)
-                bbox_centers.append(None)
-                bboxes.append(None)
-            # 10% - 50%
-            if progress_callback and idx % 10 == 0:
-                progress = 10 + int((idx / total_frames) * 40)
-                progress_callback(progress)
+            batch_frames.append(frame)
+            batch_indices.append(idx)
+            
+            # Process batch when it reaches detect_batch_size
+            if len(batch_frames) >= self.detect_batch_size:
+                # Perform batch detection
+                batch_results = self.detector.detect_batch(
+                    batch_frames, batch_size=self.detect_batch_size
+                )
+                
+                # Process batch results
+                for batch_idx, detection_result in zip(batch_indices, batch_results):
+                    if detection_result["detected"]:
+                        frame_bboxes[batch_idx] = {"bbox": detection_result["bbox"]}
+                        x1, y1, x2, y2 = detection_result["bbox"]
+                        bbox_centers.append((int((x1 + x2) / 2), int((y1 + y2) / 2)))
+                        bboxes.append((x1, y1, x2, y2))
+                    else:
+                        frame_bboxes[batch_idx] = {"bbox": None}
+                        detect_missed.append(batch_idx)
+                        bbox_centers.append(None)
+                        bboxes.append(None)
+                    
+                    # 10% - 50%
+                    if progress_callback and batch_idx % 10 == 0:
+                        progress = 10 + int((batch_idx / total_frames) * 40)
+                        progress_callback(progress)
+                
+                # Clear batch buffers
+                batch_frames.clear()
+                batch_indices.clear()
+        
+        # Process remaining frames if any
+        if batch_frames:
+            batch_results = self.detector.detect_batch(
+                batch_frames, batch_size=self.detect_batch_size
+            )
+            
+            for batch_idx, detection_result in zip(batch_indices, batch_results):
+                if detection_result["detected"]:
+                    frame_bboxes[batch_idx] = {"bbox": detection_result["bbox"]}
+                    x1, y1, x2, y2 = detection_result["bbox"]
+                    bbox_centers.append((int((x1 + x2) / 2), int((y1 + y2) / 2)))
+                    bboxes.append((x1, y1, x2, y2))
+                else:
+                    frame_bboxes[batch_idx] = {"bbox": None}
+                    detect_missed.append(batch_idx)
+                    bbox_centers.append(None)
+                    bboxes.append(None)
+                
+                # 10% - 50%
+                if progress_callback and batch_idx % 10 == 0:
+                    progress = 10 + int((batch_idx / total_frames) * 40)
+                    progress_callback(progress)
         if not quiet:
             logger.debug(f"detect missed frames: {detect_missed}")
         bkps_full = [0, total_frames]

@@ -1,0 +1,2 @@
+# Benchmark scripts for SoraWatermarkCleaner
+
