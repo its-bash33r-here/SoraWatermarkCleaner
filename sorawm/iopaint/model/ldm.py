@@ -276,7 +276,7 @@ class LDM(InpaintModel):
         ]
         return all([os.path.exists(it) for it in model_paths])
 
-    @torch.cuda.amp.autocast()
+    @torch.amp.autocast('cuda')
     def forward(self, image, mask, config: InpaintRequest):
         """
         image: [H, W, C] RGB

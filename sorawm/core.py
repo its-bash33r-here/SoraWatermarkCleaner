@@ -391,23 +391,88 @@ class SoraWM:
     def merge_audio_track(
         self, input_video_path: Path, temp_output_path: Path, output_video_path: Path
     ):
-        logger.info("Merging audio track...")
-        video_stream = ffmpeg.input(str(temp_output_path))
-        audio_stream = ffmpeg.input(str(input_video_path)).audio
-
-        (
-            ffmpeg.output(
-                video_stream,
-                audio_stream,
-                str(output_video_path),
-                vcodec="copy",
-                acodec="aac",
+        """Merge audio track from input video to processed video.
+        
+        If the input video has no audio track, the video is simply copied.
+        """
+        # Check if input video has audio track
+        try:
+            probe = ffmpeg.probe(str(input_video_path))
+            has_audio = any(
+                stream.get("codec_type") == "audio" for stream in probe.get("streams", [])
             )
-            .overwrite_output()
-            .run(quiet=True)
-        )
-        temp_output_path.unlink()
-        logger.info(f"Saved no watermark video with audio at: {output_video_path}")
+        except Exception as e:
+            logger.warning(f"Failed to probe input video for audio: {e}. Assuming no audio.")
+            has_audio = False
+
+        if has_audio:
+            logger.info("Merging audio track...")
+            try:
+                video_stream = ffmpeg.input(str(temp_output_path))
+                audio_stream = ffmpeg.input(str(input_video_path)).audio
+
+                (
+                    ffmpeg.output(
+                        video_stream,
+                        audio_stream,
+                        str(output_video_path),
+                        vcodec="copy",
+                        acodec="aac",
+                    )
+                    .overwrite_output()
+                    .run(capture_stdout=True, capture_stderr=True)
+                )
+                logger.info(f"Saved no watermark video with audio at: {output_video_path}")
+            except Exception as e:
+                # Extract error message from ffmpeg exception if available
+                # According to ffmpeg-python docs, errors have stderr attribute
+                error_msg = str(e)
+                if hasattr(e, 'stderr') and e.stderr:
+                    try:
+                        error_msg = e.stderr.decode() if isinstance(e.stderr, bytes) else str(e.stderr)
+                    except Exception:
+                        error_msg = str(e)
+                
+                logger.error(f"FFmpeg error while merging audio: {error_msg}")
+                # Fallback: copy video without audio
+                logger.info("Falling back to copying video without audio...")
+                self._copy_video_without_audio(temp_output_path, output_video_path)
+        else:
+            logger.info("Input video has no audio track, copying video without audio...")
+            self._copy_video_without_audio(temp_output_path, output_video_path)
+        
+        # Clean up temp file
+        if temp_output_path.exists():
+            temp_output_path.unlink()
+    
+    def _copy_video_without_audio(
+        self, temp_output_path: Path, output_video_path: Path
+    ):
+        """Copy video file without audio track."""
+        try:
+            video_stream = ffmpeg.input(str(temp_output_path))
+            (
+                ffmpeg.output(
+                    video_stream,
+                    str(output_video_path),
+                    vcodec="copy",
+                )
+                .global_args("-an")  # Disable audio using -an flag
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=True)
+            )
+            logger.info(f"Saved no watermark video (no audio) at: {output_video_path}")
+        except Exception as e:
+            # Extract error message from ffmpeg exception if available
+            error_msg = str(e)
+            if hasattr(e, 'stderr') and e.stderr:
+                try:
+                    error_msg = e.stderr.decode() if isinstance(e.stderr, bytes) else str(e.stderr)
+                except Exception:
+                    error_msg = str(e)
+            
+            logger.error(f"FFmpeg error while copying video: {error_msg}")
+            raise RuntimeError(f"ffmpeg error (see stderr output for detail): {error_msg}") from e
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ import torch
 
 # import torch.types
 from .mem_constants import GiB_bytes
+from .devices_utils import get_device
 
 
 @dataclass
@@ -27,17 +28,29 @@ def clear_gpu_memory():
     """
     Release and reset GPU memory state used by CUDA and PyTorch.
 
-    Forces Python garbage collection, clears PyTorch's CUDA memory cache, resets CUDA peak-memory counters, and synchronizes the CUDA device so freed memory is available for subsequent operations.
+    Forces Python garbage collection, clears PyTorch's CUDA memory cache (if CUDA is available),
+    resets CUDA peak-memory counters, and synchronizes the CUDA device so freed memory is available
+    for subsequent operations. For non-CUDA devices (MPS/CPU), only performs garbage collection.
     """
     gc.collect()
-    torch.cuda.empty_cache()
-    torch.cuda.reset_peak_memory_stats()
-    torch.cuda.synchronize()
+    device = get_device()
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats()
+        torch.cuda.synchronize()
+    elif device.type == "mps":
+        # MPS doesn't have the same memory management functions
+        # Just do garbage collection
+        pass
+    # For CPU, no special memory clearing needed
 
 
 def memory_profiling() -> MemoryProfilingResult:
     """
-    Capture current CUDA memory metrics and return them in gibibytes.
+    Capture current device memory metrics and return them in gibibytes.
+
+    For CUDA devices, returns actual GPU memory metrics.
+    For non-CUDA devices (MPS/CPU), returns reasonable defaults for chunk size calculation.
 
     Returns:
         MemoryProfilingResult: Dataclass containing:
@@ -46,13 +59,26 @@ def memory_profiling() -> MemoryProfilingResult:
             - torch_memory (float): Memory reserved by PyTorch in GiB.
     """
     clear_gpu_memory()
-    free_memory, total_memory = torch.cuda.mem_get_info()
-    torch_memory = torch.cuda.memory_reserved()
-    result = MemoryProfilingResult(
-        free_memory=free_memory / GiB_bytes,
-        total_memory=total_memory / GiB_bytes,
-        torch_memory=torch_memory / GiB_bytes,
-    )
+    device = get_device()
+    
+    if device.type == "cuda":
+        free_memory, total_memory = torch.cuda.mem_get_info()
+        torch_memory = torch.cuda.memory_reserved()
+        result = MemoryProfilingResult(
+            free_memory=free_memory / GiB_bytes,
+            total_memory=total_memory / GiB_bytes,
+            torch_memory=torch_memory / GiB_bytes,
+        )
+    else:
+        # For non-CUDA devices (MPS/CPU), use reasonable defaults
+        # Default to 4GB free memory for chunk size calculation
+        # This provides a conservative chunk size that should work on most systems
+        default_free_memory = 4.0  # GB
+        result = MemoryProfilingResult(
+            free_memory=default_free_memory,
+            total_memory=default_free_memory,
+            torch_memory=0.0,
+        )
     return result
 
     # result = MemoryProfilingResult()
